@@ -58,7 +58,7 @@ if __name__ == '__main__':
         energies.append(e)
 
     with open('results.txt', 'w', encoding='utf-8') as f:
-        print('|状态(x)|性能(y)', file=f)
+        print('||状态(x)|性能(y)', file=f)
         print('---|---|---', file=f)
         for i, (s, e) in enumerate(zip(states, energies)):
             print('{:d}|{:.6f}|{:.6f}'.format(i + 1, s, e), file=f)
