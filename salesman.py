@@ -1,28 +1,20 @@
-from __future__ import print_function
 import math
 import random
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 from simanneal import Annealer
 
 
-def distance(a, b):
-    """计算球面最短距离"""
-    R = 3963  # 地球半径，单位：miles
-    lat1, lon1 = math.radians(a[0]), math.radians(a[1])
-    lat2, lon2 = math.radians(b[0]), math.radians(b[1])
-    return math.acos(
-        math.sin(lat1) * math.sin(lat2) +
-        math.cos(lat1) * math.cos(lat2) * math.cos(lon1 - lon2)) * R
-
-
 class TravellingSalesmanProblem(Annealer):
-    """
-    用SA算法模拟旅行商问题
-    """
+    """用SA算法模拟旅行商问题"""
 
     # 导入初始状态
-    def __init__(self, state, distance_matrix):
+    def __init__(self, state, distance_matrix, visual=None):
         self.distance_matrix = distance_matrix
         super(TravellingSalesmanProblem, self).__init__(state)
+        self.visual = visual
 
     def move(self):
         """随机交换路径上的两个城市"""
@@ -38,56 +30,64 @@ class TravellingSalesmanProblem(Annealer):
         return e
 
 
+def generate_cities():
+    n_cities = random.randint(10, 20)
+    cities = np.random.uniform(0, 500, (n_cities, 2))
+    name = [i for i in range(n_cities)]
+    start = name[0]
+    distance_matrix = np.zeros((n_cities, n_cities))
+    for i in range(n_cities):
+        re_coord = cities - cities[i]
+        distance_matrix[i, :] = np.sqrt(np.sum(re_coord * re_coord, 1))
+    return name, cities, start, distance_matrix
+
+
 if __name__ == '__main__':
 
-    # 美国20个城市的经纬度
-    cities = {
-        'New York City': (40.72, 74.00),
-        'Los Angeles': (34.05, 118.25),
-        'Chicago': (41.88, 87.63),
-        'Houston': (29.77, 95.38),
-        'Phoenix': (33.45, 112.07),
-        'Philadelphia': (39.95, 75.17),
-        'San Antonio': (29.53, 98.47),
-        'Dallas': (32.78, 96.80),
-        'San Diego': (32.78, 117.15),
-        'San Jose': (37.30, 121.87),
-        'Detroit': (42.33, 83.05),
-        'San Francisco': (37.78, 122.42),
-        'Jacksonville': (30.32, 81.70),
-        'Indianapolis': (39.78, 86.15),
-        'Austin': (30.27, 97.77),
-        'Columbus': (39.98, 82.98),
-        'Fort Worth': (32.75, 97.33),
-        'Charlotte': (35.23, 80.85),
-        'Memphis': (35.12, 89.97),
-        'Baltimore': (39.28, 76.62)
-    }
+    cities, local, start, distance_matrix = generate_cities()
+
+    with open('cities.txt', 'w', encoding='utf-8') as f:
+        print('name|x|y', file=f)
+        print('---|---|---', file=f)
+        for i, city in enumerate(local):
+            print('{:d}|{:.4f}|{:.4f}'.format(i, city[0], city[1]), file=f)
 
     # 随机初始化状态序列
-    init_state = list(cities.keys())
+    init_state = list(cities)
     random.shuffle(init_state)
 
-    # 创建距离矩阵
-    distance_matrix = {}
-    for ka, va in cities.items():
-        distance_matrix[ka] = {}
-        for kb, vb in cities.items():
-            if kb == ka:
-                distance_matrix[ka][kb] = 0.0
-            else:
-                distance_matrix[ka][kb] = distance(va, vb)
-
-    tsp = TravellingSalesmanProblem(init_state, distance_matrix)
+    tsp = TravellingSalesmanProblem(init_state, distance_matrix, visual=True)
     tsp.steps = 100000
-    # 状态列表使用切片方式复制最快
-    tsp.copy_strategy = "slice"
     state, e = tsp.anneal()
 
-    while state[0] != 'New York City':
-        state = state[1:] + state[:1]  # 旋转列表至从纽约出发
+    ind = state.index(start)
+    state = state[ind:] + state[:ind]
+    seq = local[state]
+    seq = np.vstack((seq, [seq[0]]))
+    plt.plot(np.array(seq[:, 0]), np.array(seq[:, 1]), 'b-', marker='*', linewidth=1)
+    plt.show()
 
-    print()
-    print(f'{e} mile route:')
-    for city in state:
-        print("\t", city)
+    states, energies = [], []
+    for i in range(20):
+        init_state = list(cities)
+        random.shuffle(init_state)
+
+        tsp = TravellingSalesmanProblem(init_state, distance_matrix)
+        tsp.steps = 100000
+        state, e = tsp.anneal()
+        ind = state.index(start)
+        state = state[ind:] + state[:ind]
+        states.append(state)
+        energies.append(e)
+
+    with open('results.txt', 'w', encoding='utf-8') as f:
+        print('||状态|性能', file=f)
+        print('---|---|---', file=f)
+        for i, (s, e) in enumerate(zip(states, energies)):
+            print('{:d}|{}|{:.6f}'.format(i + 1, s, e), file=f)
+    i_min = energies.index(min(energies))
+    i_max = energies.index(max(energies))
+    print(f'Min ----> state: {states[i_min]}, energy: {energies[i_min]}')
+    print(f'Max ----> state: {states[i_max]}, energy: {energies[i_max]}')
+    print(f'Aver----> energy: {np.mean(energies)}')
+    print(f'Var ----> {np.var(energies)}')

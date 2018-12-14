@@ -39,7 +39,6 @@ if __name__ == '__main__':
     init_state = random.random() * 10
     mmp = MultiMinimalProblem(init_state, visual=True)
     mmp.steps = 10000
-    mmp.copy_strategy = "deepcopy"
     state, e = mmp.anneal()
     plt.scatter(state, e, s=30, marker='o')
     plt.plot(x, y)
@@ -47,12 +46,9 @@ if __name__ == '__main__':
 
     states, energies = [], []
     for i in range(20):
-        print()
-        print(f'Epoch [{i+1}/20]')
         init_state = random.random() * 10
         mmp = MultiMinimalProblem(init_state)
         mmp.steps = 10000
-        mmp.copy_strategy = "deepcopy"
         state, e = mmp.anneal()
         states.append(state)
         energies.append(e)
@@ -64,7 +60,6 @@ if __name__ == '__main__':
             print('{:d}|{:.6f}|{:.6f}'.format(i + 1, s, e), file=f)
     i_min = energies.index(min(energies))
     i_max = energies.index(max(energies))
-    print()
     print(f'Min ----> state: {states[i_min]}, energy: {energies[i_min]}')
     print(f'Max ----> state: {states[i_max]}, energy: {energies[i_max]}')
     print(f'Aver----> energy: {np.mean(energies)}')
