@@ -63,8 +63,15 @@ if __name__ == '__main__':
     ind = state.index(start)
     state = state[ind:] + state[:ind]
     seq = local[state]
+    # 画点
+    plt.plot(np.array(seq[:, 0]), np.array(seq[:, 1]), 'b*')
+    for name, point in zip(state, seq):
+        plt.text(point[0] + 1, point[1] + 1, str(name))
+    plt.show()
+    for name, point in zip(state, seq):
+        plt.text(point[0] + 1, point[1] + 1, str(name))
     seq = np.vstack((seq, [seq[0]]))
-    plt.plot(np.array(seq[:, 0]), np.array(seq[:, 1]), 'b-', marker='*', linewidth=1)
+    plt.plot(seq[:, 0], seq[:, 1], 'b-', marker='*', linewidth=1)
     plt.show()
 
     states, energies = [], []
