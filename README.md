@@ -1,6 +1,6 @@
 # 模拟退火算法
 
-multiminimal.py为SA用于解决函数优化问题的一个demo，salesman.py为SA用于解决旅行商问题的一个demo。
+multiminimal.py为SA用于解决函数优化问题的一个demo，salesman.py为SA用于解决旅行商问题的一个demo，graph_match.py为SA用于解决二分图问题的一次实验。
 
 参考文献：
 
